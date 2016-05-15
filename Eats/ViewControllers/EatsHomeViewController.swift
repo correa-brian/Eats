@@ -14,6 +14,7 @@ class EatsHomeViewController: EatsViewController, UITableViewDelegate, UITableVi
     
     var eatsTable: UITableView!
     var locationManager: CLLocationManager!
+    var venuesArray = Array<EatsVenue>()
     
     //MARK: Lifecyle Methods
     
@@ -93,8 +94,15 @@ class EatsHomeViewController: EatsViewController, UITableViewDelegate, UITableVi
                 if let resp = JSON["response"] as? Dictionary<String, AnyObject>{
 //                    print("\(resp)")
                     if let venues = resp["venues"] as? Array<Dictionary<String, AnyObject>>{
-                        print("New Venue--------------\(venues)")
+//                        print("New Venue--------------\(venues)")
                         
+                        for venueInfo in venues {
+                            let venue = EatsVenue()
+                            venue.populate(venueInfo)
+                            self.venuesArray.append(venue)
+                        }
+                        
+                        self.eatsTable.reloadData()
                     }
                 }
             }
@@ -106,7 +114,7 @@ class EatsHomeViewController: EatsViewController, UITableViewDelegate, UITableVi
     
     func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         
-        return 20
+        return self.venuesArray.count
     }
     
     func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
@@ -114,12 +122,31 @@ class EatsHomeViewController: EatsViewController, UITableViewDelegate, UITableVi
         let cellId = "cellId"
         
         if let cell = tableView.dequeueReusableCellWithIdentifier(cellId){
-            cell.detailTextLabel?.text = "\(indexPath.row)"
-            return cell
+            return self.configureCell(cell, indexPath: indexPath)
         }
         
         let cell = UITableViewCell(style: .Subtitle, reuseIdentifier: cellId)
-        cell.detailTextLabel?.text = "\(indexPath.row)"
+        return self.configureCell(cell, indexPath: indexPath)
+        
+    }
+    
+    func configureCell(cell: UITableViewCell, indexPath: NSIndexPath) -> UITableViewCell {
+        
+        let venue = self.venuesArray[indexPath.row]
+        
+        cell.textLabel?.text = venue.name
+        
+        var details = venue.address
+        
+        if(venue.address.characters.count > 0 && venue.phone.characters.count > 0){
+            details = "\(venue.address), \(venue.phone)"
+        }
+        else {
+            details = "\(venue.address)\(venue.phone)"
+        }
+        
+        cell.detailTextLabel?.text = details
+        
         return cell
         
     }
